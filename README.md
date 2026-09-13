@@ -1,154 +1,180 @@
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
-local spawnEvent = ReplicatedStorage:WaitForChild("SpawnVehicle")
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "VehicleMenu"
+gui.Name = "MenuAutos"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
---------------------------------------------------
--- BOTÓN ABRIR
---------------------------------------------------
+-- BOTÓN PARA ABRIR
+local abrir = Instance.new("TextButton")
+abrir.Size = UDim2.new(0,60,0,60)
+abrir.Position = UDim2.new(0,10,0.5,-30)
+abrir.Text = "🚗"
+abrir.TextScaled = true
+abrir.Parent = gui
 
-local openButton = Instance.new("TextButton")
-openButton.Size = UDim2.new(0, 60, 0, 60)
-openButton.Position = UDim2.new(0, 10, 0.5, -30)
-openButton.Text = "🚗"
-openButton.TextScaled = true
-openButton.Parent = gui
-
---------------------------------------------------
 -- MENÚ
---------------------------------------------------
-
 local menu = Instance.new("Frame")
-menu.Size = UDim2.new(0, 320, 0, 430)
-menu.Position = UDim2.new(0.5, -160, 0.5, -215)
+menu.Size = UDim2.new(0,320,0,430)
+menu.Position = UDim2.new(0.5,-160,0.5,-215)
+menu.BackgroundTransparency = 0.1
 menu.Parent = gui
 
---------------------------------------------------
 -- TÍTULO
+local titulo = Instance.new("TextLabel")
+titulo.Size = UDim2.new(1,-50,0,45)
+titulo.Text = "🚗 BUSCADOR DE AUTOS"
+titulo.TextScaled = true
+titulo.Parent = menu
+
+-- BOTÓN OCULTAR
+local ocultar = Instance.new("TextButton")
+ocultar.Size = UDim2.new(0,45,0,45)
+ocultar.Position = UDim2.new(1,-45,0,0)
+ocultar.Text = "✕"
+ocultar.TextScaled = true
+ocultar.Parent = menu
+
+-- BUSCADOR
+local buscar = Instance.new("TextBox")
+buscar.Size = UDim2.new(1,-20,0,40)
+buscar.Position = UDim2.new(0,10,0,55)
+buscar.PlaceholderText = "🔎 Buscar auto..."
+buscar.Text = ""
+buscar.TextScaled = true
+buscar.Parent = menu
+
+-- LISTA
+local lista = Instance.new("ScrollingFrame")
+lista.Size = UDim2.new(1,-20,0,315)
+lista.Position = UDim2.new(0,10,0,105)
+lista.ScrollBarThickness = 8
+lista.Parent = menu
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,5)
+layout.Parent = lista
+
+--------------------------------------------------
+-- ABRIR / OCULTAR
 --------------------------------------------------
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -45, 0, 45)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.Text = "🚗 BUSCADOR DE AUTOS"
-title.TextScaled = true
-title.Parent = menu
-
---------------------------------------------------
--- OCULTAR
---------------------------------------------------
-
-local hideButton = Instance.new("TextButton")
-hideButton.Size = UDim2.new(0, 45, 0, 45)
-hideButton.Position = UDim2.new(1, -45, 0, 0)
-hideButton.Text = "✕"
-hideButton.TextScaled = true
-hideButton.Parent = menu
-
-hideButton.Activated:Connect(function()
-	menu.Visible = false
-end)
-
-openButton.Activated:Connect(function()
+abrir.Activated:Connect(function()
 	menu.Visible = true
 end)
 
---------------------------------------------------
--- BUSCADOR
---------------------------------------------------
-
-local search = Instance.new("TextBox")
-search.Size = UDim2.new(1, -20, 0, 40)
-search.Position = UDim2.new(0, 10, 0, 55)
-search.PlaceholderText = "🔎 Buscar auto..."
-search.Text = ""
-search.TextScaled = true
-search.Parent = menu
+ocultar.Activated:Connect(function()
+	menu.Visible = false
+end)
 
 --------------------------------------------------
--- LISTA
+-- BUSCAR VEHÍCULOS
 --------------------------------------------------
 
-local list = Instance.new("ScrollingFrame")
-list.Size = UDim2.new(1, -20, 0, 315)
-list.Position = UDim2.new(0, 10, 0, 105)
-list.ScrollBarThickness = 8
-list.Parent = menu
+local function buscarAutos()
 
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 5)
-layout.Parent = list
+	local autos = {}
 
---------------------------------------------------
--- OBTENER VEHÍCULOS
---------------------------------------------------
+	for _, objeto in ipairs(workspace:GetDescendants()) do
 
-local function getVehicles()
+		if objeto:IsA("Model") then
 
-	local vehicles = {}
+			local asiento =
+				objeto:FindFirstChildWhichIsA("VehicleSeat", true)
 
-	-- Busca modelos con VehicleSeat
-	-- en todo Workspace.
-	for _, obj in ipairs(workspace:GetDescendants()) do
+			if asiento then
+				autos[objeto.Name] = objeto
+			end
 
-		if obj:IsA("Model")
-			and obj:FindFirstChildWhichIsA("VehicleSeat", true) then
-
-			vehicles[obj.Name] = true
 		end
 	end
 
-	return vehicles
+	return autos
 end
 
 --------------------------------------------------
--- ACTUALIZAR LISTA
+-- MOSTRAR AUTOS
 --------------------------------------------------
 
-local function updateList()
+local function actualizar()
 
-	for _, child in ipairs(list:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
+	for _, objeto in ipairs(lista:GetChildren()) do
+		if objeto:IsA("TextButton") then
+			objeto:Destroy()
 		end
 	end
 
-	local vehicles = getVehicles()
-	local text = string.lower(search.Text)
+	local autos = buscarAutos()
+	local texto = string.lower(buscar.Text)
 
-	for name in pairs(vehicles) do
+	for nombre, modelo in pairs(autos) do
 
-		if text == ""
+		if texto == ""
 			or string.find(
-				string.lower(name),
-				text,
+				string.lower(nombre),
+				texto,
 				1,
 				true
 			) then
 
-			local button = Instance.new("TextButton")
+			local boton = Instance.new("TextButton")
+			boton.Size = UDim2.new(1,-5,0,45)
+			boton.Text = "🚘 " .. nombre
+			boton.TextScaled = true
+			boton.Parent = lista
 
-			button.Size = UDim2.new(1, -5, 0, 45)
-			button.Text = "🚘 " .. name
-			button.TextScaled = true
-			button.Parent = list
+			boton.Activated:Connect(function()
 
-			button.Activated:Connect(function()
-				spawnEvent:FireServer(name)
+				local personaje = player.Character
+				if not personaje then return end
+
+				local root =
+					personaje:FindFirstChild("HumanoidRootPart")
+
+				if not root then return end
+
+				-- COPIAR AUTO
+				local copia = modelo:Clone()
+
+				copia.Parent = workspace
+
+				copia:PivotTo(
+					root.CFrame *
+					CFrame.new(0,3,-20)
+				)
+
+				-- BUSCAR ASIENTO
+				task.wait(0.3)
+
+				local asiento =
+					copia:FindFirstChildWhichIsA(
+						"VehicleSeat",
+						true
+					)
+
+				local humanoid =
+					personaje:FindFirstChildOfClass(
+						"Humanoid"
+					)
+
+				if asiento and humanoid then
+					asiento:Sit(humanoid)
+				end
+
 			end)
 		end
 	end
 
 	task.wait()
 
-	list.CanvasSize = UDim2.new(
+	lista.CanvasSize = UDim2.new(
 		0,
 		0,
 		0,
@@ -156,79 +182,60 @@ local function updateList()
 	)
 end
 
-search:GetPropertyChangedSignal("Text"):Connect(updateList)
+buscar:GetPropertyChangedSignal("Text"):Connect(actualizar)
 
 --------------------------------------------------
--- MENÚ MOVIBLE PC + CELULAR
+-- MENÚ MOVIBLE
+-- PC + CELULAR
 --------------------------------------------------
 
-local dragging = false
-local dragStart
-local startPos
+local moviendo = false
+local inicio
+local posicionInicial
 
-local function startDrag(input)
-
-	dragging = true
-	dragStart = input.Position
-	startPos = menu.Position
-
-end
-
-local function endDrag()
-
-	dragging = false
-
-end
-
-local function moveDrag(input)
-
-	if not dragging then
-		return
-	end
-
-	local delta = input.Position - dragStart
-
-	menu.Position = UDim2.new(
-		startPos.X.Scale,
-		startPos.X.Offset + delta.X,
-		startPos.Y.Scale,
-		startPos.Y.Offset + delta.Y
-	)
-
-end
-
-title.InputBegan:Connect(function(input)
+titulo.InputBegan:Connect(function(input)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1
 		or input.UserInputType == Enum.UserInputType.Touch then
 
-		startDrag(input)
+		moviendo = true
+		inicio = input.Position
+		posicionInicial = menu.Position
 	end
-
 end)
 
-title.InputEnded:Connect(function(input)
+titulo.InputEnded:Connect(function(input)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1
 		or input.UserInputType == Enum.UserInputType.Touch then
 
-		endDrag()
+		moviendo = false
 	end
-
 end)
 
 UserInputService.InputChanged:Connect(function(input)
 
+	if not moviendo then return end
+
 	if input.UserInputType == Enum.UserInputType.MouseMovement
 		or input.UserInputType == Enum.UserInputType.Touch then
 
-		moveDrag(input)
-	end
+		local diferencia =
+			input.Position - inicio
 
+		menu.Position = UDim2.new(
+			posicionInicial.X.Scale,
+			posicionInicial.X.Offset + diferencia.X,
+
+			posicionInicial.Y.Scale,
+			posicionInicial.Y.Offset + diferencia.Y
+		)
+	end
 end)
 
 --------------------------------------------------
--- INICIAR
+-- INICIO
 --------------------------------------------------
 
 menu.Visible = false
+actualizar()
