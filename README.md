@@ -1,23 +1,23 @@
--- 🚗✈️ AUTO VOLADOR + 🧍 VUELO PERSONAJE
+-- 🚗✈️ AUTO VOLADOR + 🧍 VUELO PERSONA
 -- PC + CELULAR
 -- MENÚ MOVIBLE + OCULTABLE
+-- CORREGIDO: PERSONA NO INTERFIERE CON EL AUTO
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
 --------------------------------------------------
--- VUELO PERSONAJE
+-- PERSONAJE
 --------------------------------------------------
 
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local Root = Character:WaitForChild("HumanoidRootPart")
 
-local FlyingPerson = true
+local FlyingPerson = false
 local Speed = 70
 local ColorHUD = Color3.fromRGB(0,255,255)
 
@@ -45,11 +45,13 @@ local velocidadVertical = 70
 local function encontrarAuto()
 
 	local character = Player.Character
+
 	if not character then
 		return false
 	end
 
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
+
 	if not humanoid then
 		return false
 	end
@@ -70,14 +72,83 @@ local function encontrarAuto()
 			end
 
 			return true
+
 		end
+
 	end
 
 	return false
+
 end
 
 --------------------------------------------------
--- INICIAR AUTO VOLADOR
+-- FUERZAS PERSONAJE
+--------------------------------------------------
+
+local bv = Instance.new("BodyVelocity")
+bv.Name = "PlayerFlyVelocity"
+bv.MaxForce = Vector3.zero
+bv.Velocity = Vector3.zero
+bv.Parent = Root
+
+local bg = Instance.new("BodyGyro")
+bg.Name = "PlayerFlyGyro"
+bg.MaxTorque = Vector3.zero
+bg.CFrame = Root.CFrame
+bg.Parent = Root
+
+--------------------------------------------------
+-- ACTIVAR VUELO PERSONA
+--------------------------------------------------
+
+local function activarVueloPersona()
+
+	if encontrarAuto() then
+		return
+	end
+
+	FlyingPerson = true
+
+	Humanoid.PlatformStand = true
+
+	bv.MaxForce = Vector3.new(
+		1000000,
+		1000000,
+		1000000
+	)
+
+	bg.MaxTorque = Vector3.new(
+		1000000,
+		1000000,
+		1000000
+	)
+
+end
+
+--------------------------------------------------
+-- DESACTIVAR VUELO PERSONA
+--------------------------------------------------
+
+local function desactivarVueloPersona()
+
+	FlyingPerson = false
+
+	bv.Velocity = Vector3.zero
+
+	bv.MaxForce = Vector3.zero
+
+	bg.MaxTorque = Vector3.zero
+
+	Humanoid.PlatformStand = false
+
+	Humanoid:ChangeState(
+		Enum.HumanoidStateType.GettingUp
+	)
+
+end
+
+--------------------------------------------------
+-- INICIAR AUTO
 --------------------------------------------------
 
 local function iniciarVueloCar()
@@ -90,31 +161,44 @@ local function iniciarVueloCar()
 		return false
 	end
 
+	-- Si estaba volando la persona,
+	-- apagarlo para que no interfiera
+	if FlyingPerson then
+		desactivarVueloPersona()
+	end
+
 	alturaObjetivo = mainPart.Position.Y
 
 	bodyVelocityCar = Instance.new("BodyVelocity")
+
 	bodyVelocityCar.Name = "CarFlyVelocity"
+
 	bodyVelocityCar.MaxForce = Vector3.new(
 		1000000,
 		1000000,
 		1000000
 	)
+
 	bodyVelocityCar.P = 10000
 	bodyVelocityCar.Velocity = Vector3.zero
 	bodyVelocityCar.Parent = mainPart
 
 	bodyGyroCar = Instance.new("BodyGyro")
+
 	bodyGyroCar.Name = "CarFlyGyro"
+
 	bodyGyroCar.MaxTorque = Vector3.new(
 		1000000,
 		1000000,
 		1000000
 	)
+
 	bodyGyroCar.P = 10000
 	bodyGyroCar.CFrame = mainPart.CFrame
 	bodyGyroCar.Parent = mainPart
 
 	return true
+
 end
 
 --------------------------------------------------
@@ -124,16 +208,21 @@ end
 local function detenerVueloCar()
 
 	if bodyVelocityCar then
+
 		bodyVelocityCar:Destroy()
 		bodyVelocityCar = nil
+
 	end
 
 	if bodyGyroCar then
+
 		bodyGyroCar:Destroy()
 		bodyGyroCar = nil
+
 	end
 
 	alturaObjetivo = nil
+
 end
 
 --------------------------------------------------
@@ -141,6 +230,7 @@ end
 --------------------------------------------------
 
 local sg = Instance.new("ScreenGui")
+
 sg.Name = "VueloJustinHUD"
 sg.DisplayOrder = 999
 sg.ResetOnSpawn = false
@@ -151,12 +241,16 @@ sg.Parent = Player:WaitForChild("PlayerGui")
 --------------------------------------------------
 
 local Menu = Instance.new("Frame")
+
 Menu.Size = UDim2.new(0,320,0,280)
 Menu.Position = UDim2.new(0.5,-160,0.5,-140)
+
 Menu.BackgroundColor3 = Color3.new(0,0,0)
 Menu.BackgroundTransparency = 0.15
+
 Menu.BorderSizePixel = 2
 Menu.BorderColor3 = ColorHUD
+
 Menu.Parent = sg
 
 --------------------------------------------------
@@ -164,26 +258,37 @@ Menu.Parent = sg
 --------------------------------------------------
 
 local Title = Instance.new("TextLabel")
+
 Title.Size = UDim2.new(1,0,0,45)
+
 Title.BackgroundTransparency = 1
+
 Title.TextColor3 = ColorHUD
 Title.TextSize = 20
+
 Title.Text = "🚗✈️ CONTROL DE VUELO"
+
 Title.Parent = Menu
 
 --------------------------------------------------
--- VUELO PERSONAJE
+-- VUELO PERSONA
 --------------------------------------------------
 
 local btnToggle = Instance.new("TextButton")
+
 btnToggle.Size = UDim2.new(0,150,0,50)
 btnToggle.Position = UDim2.new(0,10,0,55)
+
 btnToggle.BackgroundColor3 = Color3.new(0,0,0)
+
 btnToggle.TextColor3 = ColorHUD
 btnToggle.TextSize = 18
-btnToggle.Text = "VUELO PERSONA: ON"
+
+btnToggle.Text = "VUELO PERSONA: OFF"
+
 btnToggle.BorderSizePixel = 2
 btnToggle.BorderColor3 = ColorHUD
+
 btnToggle.Parent = Menu
 
 --------------------------------------------------
@@ -191,14 +296,20 @@ btnToggle.Parent = Menu
 --------------------------------------------------
 
 local btnUp = Instance.new("TextButton")
+
 btnUp.Size = UDim2.new(0,50,0,50)
 btnUp.Position = UDim2.new(0,220,0,55)
+
 btnUp.BackgroundColor3 = Color3.new(0,0,0)
+
 btnUp.TextColor3 = ColorHUD
 btnUp.TextSize = 25
+
 btnUp.Text = "+"
+
 btnUp.BorderSizePixel = 2
 btnUp.BorderColor3 = ColorHUD
+
 btnUp.Parent = Menu
 
 --------------------------------------------------
@@ -206,77 +317,143 @@ btnUp.Parent = Menu
 --------------------------------------------------
 
 local btnDown = Instance.new("TextButton")
+
 btnDown.Size = UDim2.new(0,50,0,50)
 btnDown.Position = UDim2.new(0,165,0,55)
+
 btnDown.BackgroundColor3 = Color3.new(0,0,0)
+
 btnDown.TextColor3 = ColorHUD
 btnDown.TextSize = 25
+
 btnDown.Text = "-"
+
 btnDown.BorderSizePixel = 2
 btnDown.BorderColor3 = ColorHUD
+
 btnDown.Parent = Menu
 
 --------------------------------------------------
--- AUTO VOLADOR
+-- AUTO
 --------------------------------------------------
 
 local btnCar = Instance.new("TextButton")
+
 btnCar.Size = UDim2.new(1,-20,0,50)
 btnCar.Position = UDim2.new(0,10,0,120)
+
 btnCar.BackgroundColor3 = Color3.new(0,0,0)
+
 btnCar.TextColor3 = ColorHUD
 btnCar.TextSize = 18
+
 btnCar.Text = "🚗 AUTO VOLADOR: OFF"
+
 btnCar.BorderSizePixel = 2
 btnCar.BorderColor3 = ColorHUD
+
 btnCar.Parent = Menu
 
 --------------------------------------------------
--- INFORMACIÓN
+-- INFO
 --------------------------------------------------
 
 local info = Instance.new("TextLabel")
+
 info.Size = UDim2.new(1,-20,0,45)
 info.Position = UDim2.new(0,10,0,185)
+
 info.BackgroundTransparency = 1
+
 info.TextColor3 = ColorHUD
 info.TextSize = 14
+
 info.Text = "WASD / JOYSTICK = MOVER"
+
 info.Parent = Menu
 
 --------------------------------------------------
--- BOTÓN OCULTAR
+-- OCULTAR
 --------------------------------------------------
 
 local btnHide = Instance.new("TextButton")
+
 btnHide.Size = UDim2.new(0,75,0,40)
+
 btnHide.Position = UDim2.new(0.5,-37,0.5,-190)
+
 btnHide.BackgroundColor3 = Color3.new(0,0,0)
+
 btnHide.TextColor3 = ColorHUD
 btnHide.TextSize = 13
+
 btnHide.Text = "OCULTAR"
+
 btnHide.BorderSizePixel = 2
 btnHide.BorderColor3 = ColorHUD
+
 btnHide.Parent = sg
 
 --------------------------------------------------
--- BOTÓN MOSTRAR
+-- MOSTRAR
 --------------------------------------------------
 
 local btnShow = Instance.new("TextButton")
+
 btnShow.Size = UDim2.new(0,80,0,40)
+
 btnShow.Position = UDim2.new(0,10,0.8,0)
+
 btnShow.BackgroundColor3 = Color3.new(0,0,0)
+
 btnShow.TextColor3 = ColorHUD
 btnShow.TextSize = 14
+
 btnShow.Text = "MOSTRAR"
+
 btnShow.BorderSizePixel = 2
 btnShow.BorderColor3 = ColorHUD
+
 btnShow.Visible = false
+
 btnShow.Parent = sg
 
 --------------------------------------------------
--- OCULTAR
+-- SUBIR
+--------------------------------------------------
+
+local subir = Instance.new("TextButton")
+
+subir.Size = UDim2.new(0,80,0,55)
+
+subir.Position = UDim2.new(1,-90,0,250)
+
+subir.Text = "⬆️ SUBIR"
+subir.TextScaled = true
+
+subir.Visible = false
+
+subir.Parent = sg
+
+--------------------------------------------------
+-- BAJAR
+--------------------------------------------------
+
+local bajar = Instance.new("TextButton")
+
+bajar.Size = UDim2.new(0,80,0,55)
+
+bajar.Position = UDim2.new(1,-90,0,315)
+
+bajar.Text = "⬇️ BAJAR"
+bajar.TextScaled = true
+
+bajar.Visible = false
+
+bajar.Parent = sg
+
+--------------------------------------------------
+-- OCULTAR MENÚ
 --------------------------------------------------
 
 btnHide.MouseButton1Click:Connect(function()
@@ -288,7 +465,7 @@ btnHide.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------
--- MOSTRAR
+-- MOSTRAR MENÚ
 --------------------------------------------------
 
 btnShow.MouseButton1Click:Connect(function()
@@ -313,13 +490,17 @@ Menu.InputBegan:Connect(function(input)
 	or input.UserInputType == Enum.UserInputType.Touch then
 
 		dragging = true
+
 		dragStart = input.Position
 		startPos = Menu.Position
 
 		input.Changed:Connect(function()
 
-			if input.UserInputState == Enum.UserInputState.End then
+			if input.UserInputState ==
+				Enum.UserInputState.End then
+
 				dragging = false
+
 			end
 
 		end)
@@ -331,17 +512,24 @@ end)
 UserInputService.InputChanged:Connect(function(input)
 
 	if dragging and (
-		input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch
+		input.UserInputType ==
+			Enum.UserInputType.MouseMovement
+
+		or input.UserInputType ==
+			Enum.UserInputType.Touch
 	) then
 
-		local delta = input.Position - dragStart
+		local delta =
+			input.Position - dragStart
 
 		Menu.Position = UDim2.new(
+
 			startPos.X.Scale,
 			startPos.X.Offset + delta.X,
+
 			startPos.Y.Scale,
 			startPos.Y.Offset + delta.Y
+
 		)
 
 	end
@@ -349,45 +537,64 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --------------------------------------------------
--- VUELO PERSONAJE ON/OFF
+-- BOTÓN VUELO PERSONA
 --------------------------------------------------
 
 btnToggle.MouseButton1Click:Connect(function()
 
-	FlyingPerson = not FlyingPerson
-
 	if FlyingPerson then
 
-		btnToggle.Text = "VUELO PERSONA: ON"
-		btnToggle.TextColor3 = ColorHUD
-
-	else
+		desactivarVueloPersona()
 
 		btnToggle.Text = "VUELO PERSONA: OFF"
 		btnToggle.TextColor3 = Color3.new(1,0,0)
+
+	else
+
+		if encontrarAuto() then
+
+			btnToggle.Text = "SAL DEL AUTO"
+
+			task.wait(1)
+
+			btnToggle.Text = "VUELO PERSONA: OFF"
+
+			return
+
+		end
+
+		activarVueloPersona()
+
+		btnToggle.Text = "VUELO PERSONA: ON"
+		btnToggle.TextColor3 = ColorHUD
 
 	end
 
 end)
 
 --------------------------------------------------
--- VELOCIDAD +
+-- VELOCIDAD PERSONA +
 --------------------------------------------------
 
 btnUp.MouseButton1Click:Connect(function()
 
 	Speed = Speed + 10
+
 	print("Velocidad: "..Speed)
 
 end)
 
 --------------------------------------------------
--- VELOCIDAD -
+-- VELOCIDAD PERSONA -
 --------------------------------------------------
 
 btnDown.MouseButton1Click:Connect(function()
 
-	Speed = math.max(10,Speed - 10)
+	Speed = math.max(
+		10,
+		Speed - 10
+	)
+
 	print("Velocidad: "..Speed)
 
 end)
@@ -403,56 +610,26 @@ btnCar.MouseButton1Click:Connect(function()
 		if iniciarVueloCar() then
 
 			flyingCar = true
-			btnCar.Text = "🚗 AUTO VOLADOR: ON"
+
+			btnCar.Text =
+				"🚗 AUTO VOLADOR: ON"
+
+			subir.Visible = true
+			bajar.Visible = true
 
 		end
 
 	else
 
 		flyingCar = false
-		btnCar.Text = "🚗 AUTO VOLADOR: OFF"
 
-		detenerVueloCar()
-
-	end
-
-end)
-
---------------------------------------------------
--- BOTONES SUBIR / BAJAR
---------------------------------------------------
-
-local subir = Instance.new("TextButton")
-subir.Size = UDim2.new(0,80,0,55)
-subir.Position = UDim2.new(1,-90,0,250)
-subir.Text = "⬆️ SUBIR"
-subir.TextScaled = true
-subir.Visible = false
-subir.Parent = sg
-
-local bajar = Instance.new("TextButton")
-bajar.Size = UDim2.new(0,80,0,55)
-bajar.Position = UDim2.new(1,-90,0,315)
-bajar.Text = "⬇️ BAJAR"
-bajar.TextScaled = true
-bajar.Visible = false
-bajar.Parent = sg
-
---------------------------------------------------
--- MOSTRAR SUBIR / BAJAR
---------------------------------------------------
-
-btnCar.MouseButton1Click:Connect(function()
-
-	if flyingCar then
-
-		subir.Visible = true
-		bajar.Visible = true
-
-	else
+		btnCar.Text =
+			"🚗 AUTO VOLADOR: OFF"
 
 		subir.Visible = false
 		bajar.Visible = false
+
+		detenerVueloCar()
 
 	end
 
@@ -464,9 +641,12 @@ end)
 
 subir.Activated:Connect(function()
 
-	if flyingCar and mainPart and alturaObjetivo then
+	if flyingCar
+	and mainPart
+	and alturaObjetivo then
 
-		alturaObjetivo = alturaObjetivo + 20
+		alturaObjetivo =
+			alturaObjetivo + 20
 
 	end
 
@@ -478,27 +658,16 @@ end)
 
 bajar.Activated:Connect(function()
 
-	if flyingCar and mainPart and alturaObjetivo then
+	if flyingCar
+	and mainPart
+	and alturaObjetivo then
 
-		alturaObjetivo = alturaObjetivo - 20
+		alturaObjetivo =
+			alturaObjetivo - 20
 
 	end
 
 end)
-
---------------------------------------------------
--- FUERZAS PERSONAJE
---------------------------------------------------
-
-local bv = Instance.new("BodyVelocity")
-bv.Name = "PlayerFlyVelocity"
-bv.MaxForce = Vector3.new(1000000,1000000,1000000)
-bv.Parent = Root
-
-local bg = Instance.new("BodyGyro")
-bg.Name = "PlayerFlyGyro"
-bg.MaxTorque = Vector3.new(1000000,1000000,1000000)
-bg.Parent = Root
 
 --------------------------------------------------
 -- CONTROL PRINCIPAL
@@ -507,19 +676,81 @@ bg.Parent = Root
 RunService.RenderStepped:Connect(function()
 
 	--------------------------------------------------
-	-- PERSONAJE
+	-- PERSONA
 	--------------------------------------------------
 
-	if FlyingPerson then
+	if FlyingPerson
+	and not encontrarAuto() then
 
-		bg.CFrame = Camera.CFrame
+		local Camera =
+			workspace.CurrentCamera
 
-		bv.Velocity =
-			Camera.CFrame.LookVector * Speed
+		bg.CFrame =
+			Camera.CFrame
+
+		local direccion =
+			Vector3.zero
+
+		if UserInputService.KeyboardEnabled then
+
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.W
+			) then
+
+				direccion +=
+					Camera.CFrame.LookVector
+
+			end
+
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.S
+			) then
+
+				direccion -=
+					Camera.CFrame.LookVector
+
+			end
+
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.A
+			) then
+
+				direccion -=
+					Camera.CFrame.RightVector
+
+			end
+
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.D
+			) then
+
+				direccion +=
+					Camera.CFrame.RightVector
+
+			end
+
+		end
+
+		if Humanoid.MoveDirection.Magnitude > 0 then
+
+			direccion =
+				Humanoid.MoveDirection
+
+		end
+
+		if direccion.Magnitude > 0 then
+
+			direccion =
+				direccion.Unit * Speed
+
+		end
+
+		bv.Velocity = direccion
 
 	else
 
-		bv.Velocity = Vector3.zero
+		bv.Velocity =
+			Vector3.zero
 
 	end
 
@@ -527,42 +758,65 @@ RunService.RenderStepped:Connect(function()
 	-- AUTO
 	--------------------------------------------------
 
-	if flyingCar and bodyVelocityCar
-	and bodyGyroCar and mainPart then
+	if flyingCar
+	and bodyVelocityCar
+	and bodyGyroCar
+	and mainPart then
 
-		local direccion = Vector3.zero
+		local Camera =
+			workspace.CurrentCamera
+
+		local direccion =
+			Vector3.zero
 
 		-- PC
 
 		if UserInputService.KeyboardEnabled then
 
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-				direccion += Camera.CFrame.LookVector
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.W
+			) then
+
+				direccion +=
+					Camera.CFrame.LookVector
+
 			end
 
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-				direccion -= Camera.CFrame.LookVector
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.S
+			) then
+
+				direccion -=
+					Camera.CFrame.LookVector
+
 			end
 
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-				direccion -= Camera.CFrame.RightVector
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.A
+			) then
+
+				direccion -=
+					Camera.CFrame.RightVector
+
 			end
 
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-				direccion += Camera.CFrame.RightVector
+			if UserInputService:IsKeyDown(
+				Enum.KeyCode.D
+			) then
+
+				direccion +=
+					Camera.CFrame.RightVector
+
 			end
 
 		end
 
 		-- CELULAR
 
-		local character = Player.Character
-		local humanoid = character and
-			character:FindFirstChildOfClass("Humanoid")
+		if Humanoid.MoveDirection.Magnitude > 0 then
 
-		if humanoid and humanoid.MoveDirection.Magnitude > 0 then
-
-			direccion = humanoid.MoveDirection
+			direccion =
+				Humanoid.MoveDirection
 
 		end
 
@@ -570,14 +824,16 @@ RunService.RenderStepped:Connect(function()
 
 		if direccion.Magnitude > 0 then
 
-			direccion = direccion.Unit * velocidad
+			direccion =
+				direccion.Unit * velocidad
 
 		end
 
-		-- MANTENER ALTURA
+		-- ALTURA
 
 		local diferenciaAltura =
-			alturaObjetivo - mainPart.Position.Y
+			alturaObjetivo -
+			mainPart.Position.Y
 
 		local movimientoVertical =
 			math.clamp(
@@ -597,10 +853,12 @@ RunService.RenderStepped:Connect(function()
 
 		if direccion.Magnitude > 0.1 then
 
-			bodyGyroCar.CFrame = CFrame.lookAt(
-				mainPart.Position,
-				mainPart.Position + direccion
-			)
+			bodyGyroCar.CFrame =
+				CFrame.lookAt(
+					mainPart.Position,
+					mainPart.Position +
+						direccion
+				)
 
 		end
 
@@ -620,7 +878,8 @@ RunService.Heartbeat:Connect(function()
 
 			flyingCar = false
 
-			btnCar.Text = "🚗 AUTO VOLADOR: OFF"
+			btnCar.Text =
+				"🚗 AUTO VOLADOR: OFF"
 
 			subir.Visible = false
 			bajar.Visible = false
@@ -640,10 +899,21 @@ end)
 Player.CharacterAdded:Connect(function(char)
 
 	Character = char
-	Humanoid = char:WaitForChild("Humanoid")
-	Root = char:WaitForChild("HumanoidRootPart")
+
+	Humanoid =
+		char:WaitForChild("Humanoid")
+
+	Root =
+		char:WaitForChild(
+			"HumanoidRootPart"
+		)
 
 	bv.Parent = Root
 	bg.Parent = Root
+
+	bv.MaxForce = Vector3.zero
+	bg.MaxTorque = Vector3.zero
+
+	FlyingPerson = false
 
 end)
