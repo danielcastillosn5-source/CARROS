@@ -1,4 +1,4 @@
--- 🚗✈️ AUTO VOLADOR + 🧍 VUELO PERSONAJE + 👻 NOCLIP
+-- 🚗✈️ AUTO VOLADOR + 🧍 VUELO PERSONAJE
 -- PC + CELULAR
 -- MENÚ MOVIBLE + OCULTABLE
 
@@ -10,7 +10,7 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 --------------------------------------------------
--- CONFIGURACIÓN ORIGINAL
+-- VUELO PERSONAJE
 --------------------------------------------------
 
 local Character = Player.Character or Player.CharacterAdded:Wait()
@@ -39,87 +39,17 @@ local velocidad = 120
 local velocidadVertical = 70
 
 --------------------------------------------------
--- NOCLIP
---------------------------------------------------
-
-local Noclip = false
-
-local function aplicarNoclip()
-
-	if not Noclip then
-		return
-	end
-
-	-- PERSONAJE
-	local character = Player.Character
-
-	if character then
-		for _,obj in ipairs(character:GetDescendants()) do
-
-			if obj:IsA("BasePart") then
-				obj.CanCollide = false
-			end
-
-		end
-	end
-
-	-- AUTO
-	if vehicleModel then
-
-		for _,obj in ipairs(vehicleModel:GetDescendants()) do
-
-			if obj:IsA("BasePart") then
-				obj.CanCollide = false
-			end
-
-		end
-
-	end
-end
-
-local function quitarNoclip()
-
-	local character = Player.Character
-
-	if character then
-
-		for _,obj in ipairs(character:GetDescendants()) do
-
-			if obj:IsA("BasePart") then
-				obj.CanCollide = true
-			end
-
-		end
-
-	end
-
-	if vehicleModel then
-
-		for _,obj in ipairs(vehicleModel:GetDescendants()) do
-
-			if obj:IsA("BasePart") then
-				obj.CanCollide = true
-			end
-
-		end
-
-	end
-end
-
---------------------------------------------------
 -- ENCONTRAR AUTO
 --------------------------------------------------
 
 local function encontrarAuto()
 
 	local character = Player.Character
-
 	if not character then
 		return false
 	end
 
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
-
 	if not humanoid then
 		return false
 	end
@@ -147,7 +77,7 @@ local function encontrarAuto()
 end
 
 --------------------------------------------------
--- INICIAR AUTO
+-- INICIAR AUTO VOLADOR
 --------------------------------------------------
 
 local function iniciarVueloCar()
@@ -221,8 +151,8 @@ sg.Parent = Player:WaitForChild("PlayerGui")
 --------------------------------------------------
 
 local Menu = Instance.new("Frame")
-Menu.Size = UDim2.new(0,320,0,330)
-Menu.Position = UDim2.new(0.5,-160,0.5,-165)
+Menu.Size = UDim2.new(0,320,0,280)
+Menu.Position = UDim2.new(0.5,-160,0.5,-140)
 Menu.BackgroundColor3 = Color3.new(0,0,0)
 Menu.BackgroundTransparency = 0.15
 Menu.BorderSizePixel = 2
@@ -287,7 +217,7 @@ btnDown.BorderColor3 = ColorHUD
 btnDown.Parent = Menu
 
 --------------------------------------------------
--- VUELO AUTO
+-- AUTO VOLADOR
 --------------------------------------------------
 
 local btnCar = Instance.new("TextButton")
@@ -302,27 +232,12 @@ btnCar.BorderColor3 = ColorHUD
 btnCar.Parent = Menu
 
 --------------------------------------------------
--- NOCLIP
---------------------------------------------------
-
-local btnNoclip = Instance.new("TextButton")
-btnNoclip.Size = UDim2.new(1,-20,0,50)
-btnNoclip.Position = UDim2.new(0,10,0,185)
-btnNoclip.BackgroundColor3 = Color3.new(0,0,0)
-btnNoclip.TextColor3 = ColorHUD
-btnNoclip.TextSize = 18
-btnNoclip.Text = "👻 NOCLIP: OFF"
-btnNoclip.BorderSizePixel = 2
-btnNoclip.BorderColor3 = ColorHUD
-btnNoclip.Parent = Menu
-
---------------------------------------------------
--- INFO
+-- INFORMACIÓN
 --------------------------------------------------
 
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1,-20,0,45)
-info.Position = UDim2.new(0,10,0,250)
+info.Position = UDim2.new(0,10,0,185)
 info.BackgroundTransparency = 1
 info.TextColor3 = ColorHUD
 info.TextSize = 14
@@ -335,7 +250,7 @@ info.Parent = Menu
 
 local btnHide = Instance.new("TextButton")
 btnHide.Size = UDim2.new(0,75,0,40)
-btnHide.Position = UDim2.new(0.5,-37,0.5,-215)
+btnHide.Position = UDim2.new(0.5,-37,0.5,-190)
 btnHide.BackgroundColor3 = Color3.new(0,0,0)
 btnHide.TextColor3 = ColorHUD
 btnHide.TextSize = 13
@@ -385,7 +300,7 @@ btnShow.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------
--- HACER MENÚ MOVIBLE
+-- MENÚ MOVIBLE
 --------------------------------------------------
 
 local dragging = false
@@ -434,7 +349,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --------------------------------------------------
--- VUELO PERSONA ON/OFF
+-- VUELO PERSONAJE ON/OFF
 --------------------------------------------------
 
 btnToggle.MouseButton1Click:Connect(function()
@@ -504,33 +419,75 @@ btnCar.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------
--- NOCLIP ON/OFF
+-- BOTONES SUBIR / BAJAR
 --------------------------------------------------
 
-btnNoclip.MouseButton1Click:Connect(function()
+local subir = Instance.new("TextButton")
+subir.Size = UDim2.new(0,80,0,55)
+subir.Position = UDim2.new(1,-90,0,250)
+subir.Text = "⬆️ SUBIR"
+subir.TextScaled = true
+subir.Visible = false
+subir.Parent = sg
 
-	Noclip = not Noclip
+local bajar = Instance.new("TextButton")
+bajar.Size = UDim2.new(0,80,0,55)
+bajar.Position = UDim2.new(1,-90,0,315)
+bajar.Text = "⬇️ BAJAR"
+bajar.TextScaled = true
+bajar.Visible = false
+bajar.Parent = sg
 
-	if Noclip then
+--------------------------------------------------
+-- MOSTRAR SUBIR / BAJAR
+--------------------------------------------------
 
-		btnNoclip.Text = "👻 NOCLIP: ON"
-		btnNoclip.TextColor3 = ColorHUD
+btnCar.MouseButton1Click:Connect(function()
 
-		aplicarNoclip()
+	if flyingCar then
+
+		subir.Visible = true
+		bajar.Visible = true
 
 	else
 
-		btnNoclip.Text = "👻 NOCLIP: OFF"
-		btnNoclip.TextColor3 = Color3.new(1,0,0)
-
-		quitarNoclip()
+		subir.Visible = false
+		bajar.Visible = false
 
 	end
 
 end)
 
 --------------------------------------------------
--- VUELO DEL PERSONAJE
+-- SUBIR
+--------------------------------------------------
+
+subir.Activated:Connect(function()
+
+	if flyingCar and mainPart and alturaObjetivo then
+
+		alturaObjetivo = alturaObjetivo + 20
+
+	end
+
+end)
+
+--------------------------------------------------
+-- BAJAR
+--------------------------------------------------
+
+bajar.Activated:Connect(function()
+
+	if flyingCar and mainPart and alturaObjetivo then
+
+		alturaObjetivo = alturaObjetivo - 20
+
+	end
+
+end)
+
+--------------------------------------------------
+-- FUERZAS PERSONAJE
 --------------------------------------------------
 
 local bv = Instance.new("BodyVelocity")
@@ -544,21 +501,13 @@ bg.MaxTorque = Vector3.new(1000000,1000000,1000000)
 bg.Parent = Root
 
 --------------------------------------------------
--- ACTUALIZACIÓN
+-- CONTROL PRINCIPAL
 --------------------------------------------------
 
 RunService.RenderStepped:Connect(function()
 
 	--------------------------------------------------
-	-- NOCLIP
-	--------------------------------------------------
-
-	if Noclip then
-		aplicarNoclip()
-	end
-
-	--------------------------------------------------
-	-- VUELO PERSONAJE
+	-- PERSONAJE
 	--------------------------------------------------
 
 	if FlyingPerson then
@@ -578,13 +527,12 @@ RunService.RenderStepped:Connect(function()
 	-- AUTO
 	--------------------------------------------------
 
-	if flyingCar and bodyVelocityCar and bodyGyroCar and mainPart then
+	if flyingCar and bodyVelocityCar
+	and bodyGyroCar and mainPart then
 
 		local direccion = Vector3.zero
 
-		--------------------------------------------------
 		-- PC
-		--------------------------------------------------
 
 		if UserInputService.KeyboardEnabled then
 
@@ -606,9 +554,7 @@ RunService.RenderStepped:Connect(function()
 
 		end
 
-		--------------------------------------------------
 		-- CELULAR
-		--------------------------------------------------
 
 		local character = Player.Character
 		local humanoid = character and
@@ -620,17 +566,15 @@ RunService.RenderStepped:Connect(function()
 
 		end
 
-		--------------------------------------------------
 		-- VELOCIDAD
-		--------------------------------------------------
 
 		if direccion.Magnitude > 0 then
+
 			direccion = direccion.Unit * velocidad
+
 		end
 
-		--------------------------------------------------
 		-- MANTENER ALTURA
-		--------------------------------------------------
 
 		local diferenciaAltura =
 			alturaObjetivo - mainPart.Position.Y
@@ -649,9 +593,7 @@ RunService.RenderStepped:Connect(function()
 				direccion.Z
 			)
 
-		--------------------------------------------------
-		-- GIRAR AUTO
-		--------------------------------------------------
+		-- GIRAR
 
 		if direccion.Magnitude > 0.1 then
 
@@ -667,63 +609,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------
--- AUTO: SUBIR / BAJAR
---------------------------------------------------
-
-local subir = Instance.new("TextButton")
-subir.Size = UDim2.new(0,80,0,55)
-subir.Position = UDim2.new(1,-90,0,250)
-subir.Text = "⬆️ SUBIR"
-subir.TextScaled = true
-subir.Visible = false
-subir.Parent = sg
-
-local bajar = Instance.new("TextButton")
-bajar.Size = UDim2.new(0,80,0,55)
-bajar.Position = UDim2.new(1,-90,0,315)
-bajar.Text = "⬇️ BAJAR"
-bajar.TextScaled = true
-bajar.Visible = false
-bajar.Parent = sg
-
-btnCar.MouseButton1Click:Connect(function()
-
-	if flyingCar then
-
-		subir.Visible = true
-		bajar.Visible = true
-
-	else
-
-		subir.Visible = false
-		bajar.Visible = false
-
-	end
-
-end)
-
-subir.Activated:Connect(function()
-
-	if flyingCar and mainPart and alturaObjetivo then
-
-		alturaObjetivo = alturaObjetivo + 20
-
-	end
-
-end)
-
-bajar.Activated:Connect(function()
-
-	if flyingCar and mainPart and alturaObjetivo then
-
-		alturaObjetivo = alturaObjetivo - 20
-
-	end
-
-end)
-
---------------------------------------------------
--- SI SE BAJA DEL AUTO
+-- COMPROBAR AUTO
 --------------------------------------------------
 
 RunService.Heartbeat:Connect(function()
@@ -748,7 +634,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- RESPALDAR PERSONAJE AL MORIR/REAPARECER
+-- REAPARECER
 --------------------------------------------------
 
 Player.CharacterAdded:Connect(function(char)
